@@ -22,7 +22,7 @@ Built with Flask, DialogFlow, Redis, Heroku, and PostgreSQL.
 
 ## Local Development
 
-1. Clone: `git clone https://github.com/yourusername/autism-mentor-support.git`
+1. Clone: `git clone https://github.com/ayalkh/A.W.S-web-public.git`
 2. Install: `pip install -r requirements.txt`
 3. Set up environment variables
 4. Run: `flask run`
