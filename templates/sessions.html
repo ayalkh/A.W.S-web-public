@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Sessions for {{ child.first_name }} {{ child.surname }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Styles/sessionsStyle.css') }}">
+  
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+    <div class="profile-container">
+<header>
+    <h2>Sessions for {{ child.first_name }} {{ child.surname }}</h2>
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('home') }}">Home</a></li>
+            <li><a href="{{ url_for('profile') }}">User Information</a></li>
+            <li><a href="{{ url_for('children_progress') }}">Children's Progress</a></li>
+        </ul>
+    </nav>
+</header>
+
+    </div>
+    <div class="filter-options">
+        <div class="filter-row">
+            <label for="month-filter">Filter by Month:</label>
+            <input type="month" id="month-filter">
+        </div>
+        <div class="filter-row">
+            <label for="start-date">Start Date:</label>
+            <input type="date" id="start-date">
+            
+            <label for="end-date">End Date:</label>
+            <input type="date" id="end-date">
+        </div>
+        <div class="filter-row">
+            <label for="goal-filter">Filter by Goal:</label>
+            <select id="goal-filter">
+                <option value="">All Goals</option>
+                <!-- Options will be populated dynamically -->
+            </select>
+        </div>
+        <div class="filter-row">
+            <button id="apply-filter">Apply Filter</button>
+            <button id="reset-filter">Reset Filter</button>
+        </div>
+    </div>
+
+    <div class="table-container full-width">
+        <table class="sortable-table">
+            <thead>
+                <tr>
+                    <th>Therapy Type</th>
+                    <th data-sort="date">Session Date</th>
+                    <th>Goals</th>
+                    <th>Update</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+                <tbody>
+                    {% for session in sessions %}
+                    <tr>
+                        <form id="update-session-{{ session.id }}" method="post"
+                            action="{{ url_for('update_session', session_id=session.id) }}"
+                            onsubmit="event.preventDefault(); submitForm(this);">
+                            <input type="hidden" name="session_id" value="{{ session.id }}">
+                            <td>
+                                <select name="therapy_type" {% if user_info and user_info.role %}disabled{% endif %}>
+                                    <option value="{{ default_therapy_type }}" selected>{{ default_therapy_type }}</option>
+                                    {% if default_therapy_type != 'Emotional Therapist' %}
+                                        <option value="Emotional Therapist">Emotional Therapist</option>
+                                    {% endif %}
+                                    {% if default_therapy_type != 'Occupational Therapist' %}
+                                        <option value="Occupational Therapist">Occupational Therapist</option>
+                                    {% endif %}
+                                    {% if default_therapy_type != 'Physiotherapist' %}
+                                        <option value="Physiotherapist">Physiotherapist</option>
+                                    {% endif %}
+                                    {% if default_therapy_type != 'Speech Therapist' %}
+                                        <option value="Speech Therapist">Speech Therapist</option>
+                                    {% endif %}
+                                </select>
+                            </td>
+                            <td>
+                                <input type="datetime-local" name="session_date"
+                                    value="{{ session.session_date.strftime('%Y-%m-%dT%H:%M') if session.session_date else '' }}"
+                                    required>
+                            </td>
+                            <td>
+                                <div class="goal-container" id="goal-container-{{ session.id }}">
+                                    {% for goal in session.goals %}
+                                    <div class="goal-item" data-goal-index="{{ loop.index }}">
+                                        <textarea class="expandable-textarea" name="setting_goals[]">{{ goal.description }}</textarea>
+                                        <select name="progress_rating[]">
+                                            <option value="" disabled>Choose rating</option>
+                                            {% for i in range(1, 11) %}
+                                            <option value="{{ i }}" {% if goal.rating==i %}selected{% endif %}>{{ i }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <textarea class="expandable-textarea" name="progress_update[]" placeholder="Progress Update">{{ goal.progress_update }}</textarea>
+                                        <textarea class="expandable-textarea" name="activities_performed[]" placeholder="Activities Performed">{{ goal.activities_performed }}</textarea>
+                                        <textarea class="expandable-textarea" name="notes_comments[]" placeholder="Notes/Comments">{{ goal.notes_comments }}</textarea>
+                                        <button type="button" onclick="removeGoal(this)">Remove Goal</button>
+                                    </div>
+                                    {% endfor %}
+                                    <button type="button" class="add-goal-button" onclick="addGoal(this, '{{ default_therapy_type }}')">Add Goal</button>                                </div>
+                            </td>
+                            <td>
+                                <button type="submit" name="update_session">Update</button>
+                            </td>
+                        </form>
+                        <td>
+                            <button type="button" class="delete-session-btn" data-session-id="{{ session.id }}">Delete</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <form id="add-session" method="post" action="{{ url_for('add_session', child_id=child.id) }}"
+                            onsubmit="event.preventDefault(); submitForm(this);">
+                            <td>
+                                <select name="therapy_type" id="therapy_type">
+                                    <option value="{{ default_therapy_type }}" selected>{{ default_therapy_type }}</option>
+                                    {% if default_therapy_type != 'Emotional Therapist' %}
+                                        <option value="Emotional Therapist">Emotional Therapist</option>
+                                    {% endif %}
+                                    {% if default_therapy_type != 'Occupational Therapist' %}
+                                        <option value="Occupational Therapist">Occupational Therapist</option>
+                                    {% endif %}
+                                    {% if default_therapy_type != 'Physiotherapist' %}
+                                        <option value="Physiotherapist">Physiotherapist</option>
+                                    {% endif %}
+                                    {% if default_therapy_type != 'Speech Therapist' %}
+                                        <option value="Speech Therapist">Speech Therapist</option>
+                                    {% endif %}
+                                </select>
+                            </td>
+                            <td>
+                                <input type="datetime-local" name="session_date"
+                                    value="{{ datetime.now().strftime('%Y-%m-%dT%H:%M') if datetime else '' }}" required>
+                            </td>
+                            <td>
+                                <div class="goal-container" id="goal-container-new">
+                                    <!-- Goals will be added here dynamically -->
+                                    <button type="button" class="add-goal-button" onclick="addGoal(this, '{{ default_therapy_type }}')">Add Goal</button>                                </div>
+                            </td>
+                            <td>
+                                <button type="submit" name="add_session">Add</button>
+                            </td>
+                        </form>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    <div id="errorMessage" style="color: red; display: none;"></div>
+    <div class="chart-container" style="position: relative; height:40vh; width:80vw; margin: auto;">
+        <canvas id="progressChart"></canvas>
+    </div>
+    <script>
+     document.addEventListener('DOMContentLoaded', function () {
+    const addSessionForm = document.getElementById('add-session');
+    console.log('Add Session Form:', addSessionForm);
+    if (addSessionForm) {
+        const goalContainer = addSessionForm.closest('tr').querySelector('.goal-container');
+        console.log('Goal Container:', goalContainer);
+        if (goalContainer) {
+            const defaultTherapyType = addSessionForm.querySelector('select[name="therapy_type"]').value;
+            console.log('Adding initial goal item to add-session form');
+            addGoal(goalContainer.querySelector('.add-goal-button'), defaultTherapyType, true);
+        } else {
+            console.error('Goal container not found in the form');
+        }
+    } else {
+        console.error('Add Session form not found');
+    }
+
+    // Add initial goals to existing session forms
+    const updateForms = document.querySelectorAll('form[id^="update-session-"]');
+    updateForms.forEach(form => {
+        const goalContainer = form.querySelector('.goal-container');
+        if (goalContainer && goalContainer.querySelectorAll('.goal-item').length === 0) {
+            const defaultTherapyType = form.querySelector('select[name="therapy_type"]').value;
+            addGoal(goalContainer.querySelector('.add-goal-button'), defaultTherapyType, true);
+        }
+    });
+});
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.delete-session-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const sessionId = this.getAttribute('data-session-id');
+                    deleteSession(sessionId);
+                });
+            });
+        });
+        function deleteSession(sessionId) {
+            if (confirm('Are you sure you want to delete this session?')) {
+                fetch(`/delete_session/${sessionId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert(data.message || "An error occurred while deleting the session.");
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert("An error occurred while deleting the session.");
+                    });
+            }
+        }
+
+        function addGoal(button, defaultTherapyType, isInitial = false) {
+    console.log('AddGoal called. Button:', button, 'Default Therapy Type:', defaultTherapyType, 'Is Initial:', isInitial);
+
+    const goalContainer = button.closest('.goal-container');
+    const newGoalItem = document.createElement('div');
+    newGoalItem.className = 'goal-item';
+    const currentGoalCount = goalContainer.querySelectorAll('.goal-item').length;
+    newGoalItem.dataset.goalIndex = currentGoalCount + 1;
+    newGoalItem.innerHTML = `
+        <textarea class="expandable-textarea" name="setting_goals[]" data-debug="goal-textarea" ${isInitial ? 'required' : ''}></textarea>
+        <select name="progress_rating[]" data-debug="rating-select" ${isInitial ? 'required' : ''}>
+            <option value="" selected disabled>Choose rating</option>
+            ${[...Array(10)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('')}
+        </select>
+        <textarea class="expandable-textarea" name="progress_update[]" placeholder="Progress Update"></textarea>
+        <textarea class="expandable-textarea" name="activities_performed[]" placeholder="Activities Performed"></textarea>
+        <textarea class="expandable-textarea" name="notes_comments[]" placeholder="Notes/Comments"></textarea>
+        <button type="button" onclick="removeGoal(this)" ${isInitial ? 'style="display:none;"' : ''}>Remove</button>
+    `;
+    goalContainer.insertBefore(newGoalItem, button);
+    console.log(`${isInitial ? 'Initial' : 'New'} goal added. Total goals:`, goalContainer.querySelectorAll('.goal-item').length);
+}
+        function removeGoal(button) {
+            const goalItem = button.closest('.goal-item');
+            goalItem.remove();
+        }
+
+        // The submitForm function remains the same as in your current implementation
+        function submitForm(form) {
+            console.log('Submitting form:', form.id);
+
+            const formData = new FormData(form);
+            const goalItems = form.closest('tr').querySelectorAll('.goal-item');
+
+            console.log('Number of goal items found:', goalItems.length);
+            // Clear any existing goal data
+            for (let key of formData.keys()) {
+                if (key.startsWith('setting_goals') || key.startsWith('progress_rating')) {
+                    formData.delete(key);
+                }
+            }
+            let hasValidGoal = false;
+            goalItems.forEach((item, index) => {
+                const goalTextarea = item.querySelector('textarea[name^="setting_goals"]');
+                const ratingSelect = item.querySelector('select[name^="progress_rating"]');
+                const progressUpdate = item.querySelector('textarea[name^="progress_update"]');
+                const activitiesPerformed = item.querySelector('textarea[name^="activities_performed"]');
+                const notesComments = item.querySelector('textarea[name^="notes_comments"]');
+                
+                if (goalTextarea && ratingSelect) {
+                const goal = goalTextarea.value.trim();
+                const rating = ratingSelect.value;
+                if (goal && rating) {
+                    formData.append(`setting_goals[${index}]`, goal);
+                    formData.append(`progress_rating[${index}]`, rating);
+                    formData.append(`progress_update[${index}]`, progressUpdate.value);
+                    formData.append(`activities_performed[${index}]`, activitiesPerformed.value);
+                    formData.append(`notes_comments[${index}]`, notesComments.value);
+                    hasValidGoal = true;
+                }
+            }
+    });
+            if (!hasValidGoal) {
+                console.error('No valid goals found');
+                alert('Please add at least one goal with a rating before submitting.');
+                return;
+            }
+
+            // Log form data for debugging
+            console.log('Form data:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value}`);
+            }
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        console.error('Server error:', data.message);
+                        alert(data.message || "An error occurred while submitting the form.");
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    alert("An error occurred while submitting the form. Please check the console for details.");
+                });
+        }
+
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            const chartData = JSON.parse('{{ chart_data | safe }}');
+
+            // Sort the chartData by date
+            chartData.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            // Prepare data for the chart
+            const labels = chartData.map(session => {
+                const date = new Date(session.date);
+                return date.toISOString().split('T')[0]; // This will give you just the date part (YYYY-MM-DD)
+            });
+
+            const allGoals = new Map();
+
+            // Find all unique goals and initialize their data arrays
+            chartData.forEach(session => {
+                session.goals.forEach(goal => {
+                    if (!allGoals.has(goal.description)) {
+                        allGoals.set(goal.description, labels.map(() => null));
+                    }
+                });
+            });
+
+            // Populate data for each goal
+            chartData.forEach((session, index) => {
+                allGoals.forEach((data, goalDescription) => {
+                    const goal = session.goals.find(g => g.description === goalDescription);
+                    if (goal) {
+                        data[index] = goal.rating;
+                    }
+                });
+            });
+
+            // Create datasets
+            const datasets = Array.from(allGoals).map(([goalDescription, data]) => ({
+                label: goalDescription,
+                data: data,
+                fill: false,
+                borderColor: getRandomColor(),
+                tension: 0.1,
+                spanGaps: true // This will connect points even when there are null values in between
+            }));
+
+            // Create the chart
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Goal Progress Over Time'
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+        });
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+    </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const table = document.querySelector('.sortable-table');
+        if (!table) {
+            console.error('Table with class "sortable-table" not found');
+            return;
+        }
+    
+        const tbody = table.querySelector('tbody');
+        if (!tbody) {
+            console.error('Tbody not found in the table');
+            return;
+        }
+    
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        
+        const monthFilter = document.getElementById('month-filter');
+        const startDate = document.getElementById('start-date');
+        const endDate = document.getElementById('end-date');
+        const goalFilter = document.getElementById('goal-filter');
+        const applyFilterBtn = document.getElementById('apply-filter');
+        const resetFilterBtn = document.getElementById('reset-filter');
+    
+        if (!monthFilter || !startDate || !endDate || !goalFilter || !applyFilterBtn || !resetFilterBtn) {
+            console.error('One or more filter elements not found');
+            return;
+        }
+
+        // Populate goal filter dropdown
+        const uniqueGoals = new Set();
+        rows.forEach(row => {
+            const goalTextareas = row.querySelectorAll('.goal-item textarea[name="setting_goals[]"]');
+            goalTextareas.forEach(textarea => {
+                if (textarea.value.trim() !== '') {
+                    uniqueGoals.add(textarea.value.trim());
+                }
+            });
+        });
+
+        uniqueGoals.forEach(goal => {
+            const option = document.createElement('option');
+            option.value = goal;
+            option.textContent = goal;
+            goalFilter.appendChild(option);
+        });
+    
+        function filterRows() {
+            const monthValue = monthFilter.value;
+            const startValue = startDate.value;
+            const endValue = endDate.value;
+            const goalValue = goalFilter.value;
+    
+            rows.forEach(row => {
+                const dateInput = row.querySelector('input[name="session_date"]');
+                if (!dateInput) {
+                    console.error('Date input not found in row', row);
+                    return;
+                }
+                const rowDate = new Date(dateInput.value);
+                const goalContainers = row.querySelectorAll('.goal-item textarea[name="setting_goals[]"]');
+                let showRow = true;
+    
+                if (monthValue) {
+                    const [year, month] = monthValue.split('-');
+                    showRow = rowDate.getFullYear() == year && rowDate.getMonth() == month - 1;
+                }
+    
+                if (startValue && showRow) {
+                    showRow = rowDate >= new Date(startValue);
+                }
+    
+                if (endValue && showRow) {
+                    showRow = rowDate <= new Date(endValue);
+                }
+    
+                if (goalValue && showRow) {
+                    showRow = Array.from(goalContainers).some(goalTextarea => 
+                        goalTextarea.value.trim() === goalValue
+                    );
+                }
+    
+                row.style.display = showRow ? '' : 'none';
+            });
+        }
+    
+        applyFilterBtn.addEventListener('click', filterRows);
+    
+        resetFilterBtn.addEventListener('click', function() {
+            monthFilter.value = '';
+            startDate.value = '';
+            endDate.value = '';
+            goalFilter.value = '';
+            rows.forEach(row => row.style.display = '');
+        });
+    
+        // Sorting code (remains the same)
+        const dateHeader = table.querySelector('th[data-sort="date"]');
+        if (dateHeader) {
+            dateHeader.addEventListener('click', function() {
+                rows.sort((a, b) => {
+                    const dateA = new Date(a.querySelector('input[name="session_date"]').value);
+                    const dateB = new Date(b.querySelector('input[name="session_date"]').value);
+                    return dateA - dateB;
+                });
+                
+                if (this.classList.contains('asc')) {
+                    rows.reverse();
+                    this.classList.remove('asc');
+                    this.classList.add('desc');
+                } else {
+                    this.classList.remove('desc');
+                    this.classList.add('asc');
+                }
+                
+                tbody.innerHTML = '';
+                rows.forEach(row => tbody.appendChild(row));
+            });
+        }
+    });
+    </script>
+      
+
+</body>
+
+</html>

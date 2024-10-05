@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Styles/style.css') }}">
+</head>
+<body>
+    <header>
+        <h2>{{ user_info.first_name if user_info else '' }} Profile</h2>
+        <h2>User Information</h2>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('profile') }}">User Information</a></li>
+                <li><a href="{{ url_for('children_progress') }}">Children's Progress</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+
+    <div class="profile-container">
+        <form id="user-info-form" method="post" action="{{ url_for('profile') }}">
+            <div class="user-info">
+                <label for="first_name">First Name:</label>
+                <input type="text" id="first_name" name="first_name" value="{{ user_info.first_name if user_info else '' }}" disabled><br>
+
+                <label for="surname">Surname:</label>
+                <input type="text" id="surname" name="surname" value="{{ user_info.surname if user_info else '' }}" disabled><br>
+
+                <label for="phone_number">Phone Number:</label>
+                <input type="text" id="phone_number" name="phone_number" value="{{ user_info.phone_number if user_info else '' }}" disabled><br>
+
+                <label for="gender">Gender:</label>
+                <select id="gender" name="gender" disabled>
+                    <option value="male" {% if user_info and user_info.gender == 'male' %}selected{% endif %}>Male</option>
+                    <option value="female" {% if user_info and user_info.gender == 'female' %}selected{% endif %}>Female</option>
+                </select><br>
+
+                <label for="role">Role:</label>
+                <select id="role" name="role" disabled>
+                    <option value="OccupationalTherapist" {% if user_info and user_info.role == 'OccupationalTherapist' %}selected{% endif %}>Occupational Therapist</option>
+                    <option value="SpeechTherapist" {% if user_info and user_info.role == 'SpeechTherapist' %}selected{% endif %}>Speech Therapist</option>
+                    <option value="PhysioTherapist" {% if user_info and user_info.role == 'PhysioTherapist' %}selected{% endif %}>Physio Therapist</option>
+                    <option value="EmotionalTherapist" {% if user_info and user_info.role == 'EmotionalTherapist' %}selected{% endif %}>Emotional Therapist</option>
+                </select><br>
+            </div>
+
+            <button type="button" id="edit-button" onclick="editUserInfo()">Edit</button>
+            <button type="button" id="save-button" onclick="saveUserInfo()" style="display:none">Save</button>
+        </form>
+    </div>
+
+    <script src="{{ url_for('static', filename='Scripts/script.js') }}"></script>
+</body>
+</html>

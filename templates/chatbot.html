@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        #container {
+            width: 100%;
+            height: 100%;
+            transition: all 0.3s ease;
+        }
+        #container.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
+        }
+        df-messenger {
+            --df-messenger-bot-message: #f0f0f0;
+            --df-messenger-button-titlebar-color: #4285f4;
+            --df-messenger-chat-background-color: #f8f9fa;
+            --df-messenger-font-color: #333;
+            --df-messenger-send-icon: #4285f4;
+            --df-messenger-user-message: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <df-messenger
+            intent="WELCOME"
+            chat-title="AMSBot"
+            agent-id="664d1147-5439-41da-91f5-e87e741196a6"
+            language-code="en"
+            expand="true"
+        ></df-messenger>
+    </div>
+    <button id="toggle-btn">Toggle Fullscreen</button>
+
+    <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+    <script>
+        const container = document.getElementById('container');
+        const toggleBtn = document.getElementById('toggle-btn');
+        const dfMessenger = document.querySelector('df-messenger');
+
+        function injectStyles(host, styles) {
+            if (host.shadowRoot) {
+                const style = document.createElement('style');
+                style.textContent = styles;
+                host.shadowRoot.appendChild(style);
+            }
+        }
+
+        function setFullscreenStyles(isFullscreen) {
+            const styles = isFullscreen
+                ? `
+                df-messenger-chat { height: 100vh !important; max-height: none !important; }
+                .chat-wrapper { height: 100vh !important; max-height: none !important; }
+                `
+                : `
+                df-messenger-chat { height: 480px !important; max-height: 480px !important; }
+                .chat-wrapper { height: 480px !important; max-height: 480px !important; }
+                `;
+            injectStyles(dfMessenger, styles);
+        }
+
+        toggleBtn.addEventListener('click', () => {
+            container.classList.toggle('fullscreen');
+            setFullscreenStyles(container.classList.contains('fullscreen'));
+        });
+
+        dfMessenger.addEventListener('df-messenger-loaded', () => {
+            console.log('Dialogflow Messenger loaded');
+            setFullscreenStyles(false); // Set initial styles
+        });
+
+        // Log any errors
+        window.addEventListener('error', function(event) {
+            console.error('Error:', event.message, 'at', event.filename, ':', event.lineno);
+        });
+    </script>
+</body>
+</html>

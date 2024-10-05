@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autism Mentor Support</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Styles/HomeStyle.css') }}">
+</head>
+<body>
+    <header>
+        <h2>Welcome to</h2>
+        <h1>Autism Mentor Support</h1>
+
+        <nav>
+            <ul>
+                <li><a href="#chatbot">Chatbot</a></li>
+                <li><a href="#stories_games">Social Stories & Games</a></li>
+                <li><a href="#about">About</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropbtn">Profile</a>
+                    <div class="dropdown-content">
+                        <a href="{{ url_for('profile') }}">User Information</a>
+                        <a href="{{ url_for('children_progress') }}">Children's Progress</a>
+                    </div>
+                </li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+               
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section class="section" id="home">
+            <div class="welcome">
+                <p>Autism Mentor Support is an initiative aimed at providing support and assistance to children with autism. We provide advanced tools and resources for kindergarten teachers, child psychologists, and educational specialists to help them in their daily work and offer the best care for children.</p>
+                <video controls style="width: 50%; max-width: 300px; height: auto;">
+                    <source src="{{ url_for('static', filename='images/welcomeVid.mp4') }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </section>
+   
+        <section class="section" id="chatbot">
+            <h2>Chatbot</h2>
+            <div id="chatbot-container">
+                <iframe src="{{ url_for('chatbot') }}" id="chatbot-iframe"></iframe>
+            </div>
+            <button id="fullscreen-btn">Toggle Fullscreen</button>
+        </section>
+        
+        <section class="section" id="stories_games">
+            <h2>Social Stories</h2>
+            <div class="story">
+                <div class="story-grid">
+                    <div class="story-item">
+                        <p>Going To Barber</p>
+                        <a href="{{ url_for('static', filename='Stories/goingToBarber.html') }}" target="_blank">
+                            <img src="{{ url_for('static', filename='images/goingToBarber.png') }}" alt="Going To Barber">
+                        </a>
+                    </div>
+                    <div class="story-item">
+                        <p>Going To Beach</p>
+                        <a href="{{ url_for('static', filename='Stories/goingToBeach.html') }}" target="_blank">
+                            <img src="{{ url_for('static', filename='images/goingToBeach.png') }}" alt="Going To Beach">
+                        </a>
+                    </div>
+                    <div class="story-item">
+                        <p>Going To Park</p>
+                        <a href="{{ url_for('static', filename='Stories/goingToPark.html') }}" target="_blank">
+                            <img src="{{ url_for('static', filename='images/goingToPark.png') }}" alt="Going To Park">
+                        </a>
+                    </div>
+                    <div class="story-item">
+                        <p>Going To School</p>
+                        <a href="{{ url_for('static', filename='Stories/goingToScool.html') }}" target="_blank">
+                            <img src="{{ url_for('static', filename='images/goingToScool.png') }}" alt="Going To School">
+                        </a>
+                    </div>
+                    <div class="story-item">
+                        <p>Learn Colors</p>
+                        <a href="{{ url_for('static', filename='Stories/learnColors.html') }}" target="_blank">
+                            <img src="{{ url_for('static', filename='images/learnColors.png') }}" alt="Learn Colors">
+                        </a>
+                    </div>
+                    <div class="story-item">
+                        <p>Learning Shapes</p>
+                        <a href="{{ url_for('static', filename='Stories/learningShapes.html') }}" target="_blank">
+                            <img src="{{ url_for('static', filename='images/learningShapes.png') }}" alt="Learning Shapes">
+                        </a>
+                    </div>
+                    <div class="story-item">
+                        <p>Making New Friends</p>
+                        <a href="{{ url_for('static', filename='Stories/MakingNewFriends.html') }}" target="_blank">
+                            <img src="{{ url_for('static', filename='images/MakeFriends.png') }}" alt="Making New Friends">
+                        </a>
+                    </div>
+                    <div class="story-item">
+                        <p>New KinderGarten</p>
+                        <a href="{{ url_for('static', filename='Stories/newKinderGarten.html') }}" target="_blank">
+                            <img src="{{ url_for('static', filename='images/newKinderGarten.png') }}" alt="New KinderGarten">
+                        </a>
+                    </div>
+                    <div class="story-item">
+                        <p>Going To Sleep</p>
+                        <a href="{{ url_for('static', filename='Stories/goingToSleep.html') }}" target="_blank">
+                            <img src="{{ url_for('static', filename='images/goingToSleep.png') }}" alt="Going To Sleep">
+                        </a>
+                    </div>
+                    <div class="story-item">
+                        <p>Learn To Listen</p>
+                        <a href="{{ url_for('static', filename='Stories/learnToListen.html') }}" target="_blank">
+                            <img src="{{ url_for('static', filename='images/learnToListen.png') }}" alt="Learn To Listen">
+                        </a>
+                    </div>
+                    <div class="story-item">
+                        <p>Going To Birthday Party</p>
+                        <a href="{{ url_for('static', filename='Stories/goingToBirthdayParty.html') }}" target="_blank">
+                            <img src="{{ url_for('static', filename='images/goingToBirthdayParty.png') }}" alt="Going To Birthday Party">
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="section" id="about">
+            <h2>About Us</h2>
+            <p>We are two students, Ayal Khier and Leen Abo Zedan, working on our final project for a B.Sc. in Information Systems. Our aim is to help professionals working with children with autism by providing tools and resources to make their work easier and have a positive impact.</p>
+        
+            <h3>Contact Us</h3>
+            <p>If you have any questions or need assistance, please do not hesitate to contact us via email:</p>
+            <ul>
+                <li><a href="mailto:ayal1701@gmail.com">ayal1701@gmail.com</a></li>
+                <li><a href="mailto:Leenaz2442@gmail.com">Leenaz2442@gmail.com</a></li>
+            </ul>
+        </section>
+    </main>
+    <footer>
+        <a href="/privacy-policy">Privacy Policy</a>
+
+        <p>&copy; 2024 Autism Mentor Support</p>
+    </footer>
+   
+    <script>
+        document.getElementById('fullscreen-btn').addEventListener('click', function() {
+            var iframe = document.getElementById('chatbot-iframe');
+            iframe.contentWindow.postMessage('toggleFullscreen', '*');
+        });
+        </script>
+    <script src="{{ url_for('static', filename='Scripts/script.js') }}"></script>
+</body>
+</html>

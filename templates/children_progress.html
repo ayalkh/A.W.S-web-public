@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Styles/style.css') }}">
+
+    <script>
+        function showCustomAlert(message, link) {
+            const modal = document.getElementById('customAlert');
+            const alertMessage = document.getElementById('alertMessage');
+            const alertLink = document.getElementById('alertLink');
+            const closeBtn = document.getElementsByClassName('close')[0];
+            const okBtn = document.getElementById('alertOk');
+        
+            alertMessage.innerHTML = message.replace(/\n/g, '<br>');
+            if (link) {
+                alertLink.href = link;
+                alertLink.style.display = 'inline-block';
+            } else {
+                alertLink.style.display = 'none';
+            }
+        
+            modal.style.display = 'block';
+        
+            closeBtn.onclick = function() {
+                modal.style.display = 'none';
+            }
+        
+            okBtn.onclick = function() {
+                modal.style.display = 'none';
+            }
+        
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        }
+        
+        function exportAllSessions() {
+    const exportButton = document.getElementById('exportButton');
+    exportButton.disabled = true;
+    exportButton.textContent = 'Exporting...';
+    
+    fetch('/export_all_sessions', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json'
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errorData => {
+                throw errorData;
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.spreadsheetUrl) {
+            showCustomAlert('Export successful! Google Sheets has been opened in a new tab.\n\n' +
+                'The Google Apps Script has been automatically added to your spreadsheet.\n' +
+                'Important: For Report Generation, enable the Chrome V8 runtime:\n' +
+                '1. In the opened sheet go to (Extensions -> Apps Script editor)\n' +
+                '2. Go to Project Settings (gear icon)\n' +
+                '3. Under "General Settings", Click on "Enable Chrome V8 runtime" \n' +
+                '4. Save the changes (or Go back to the sheet and Refresh it)\n\n' +
+                'After Enabling V8 Click on "Custom Menu" -> "Generate Reports".\n\n' +
+                'If you don\'t see the "Custom Menu", please refresh the spreadsheet.\n\n' +
+                'Then click on "Generate Report" on the side of the page.\n\n' +
+                'After it finishes, you will see a new Sheet "Individual Reports" that contains the Report\n\n' +
+
+                'You can keep this window open for reference while working in the Google Sheet.');
+
+            // Open Google Sheets in a new tab
+            window.open(data.spreadsheetUrl, '_blank', 'noopener');
+        } else {
+            throw new Error('Invalid response from server');
+        }
+    })
+    .catch(error => {
+        console.error('Export error:', error);
+        if (error.requires_api_enablement) {
+            showCustomAlert(error.error, error.link);
+        } else if (error.redirect) {
+            showCustomAlert('You need to reauthorize the application. You will be redirected to the Google authorization page.');
+            setTimeout(() => {
+                window.location.href = error.redirect;
+            }, 3000);
+        } else {
+            showCustomAlert('Export failed: ' + (error.error || error.message || 'Unknown error'));
+        }
+    })
+    .finally(() => {
+        exportButton.disabled = false;
+        exportButton.textContent = 'Export to Google Sheets';
+    });
+}
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const oauthSuccess = urlParams.get('oauth_success');
+            if (oauthSuccess === 'true') {
+                showCustomAlert('Authorization successful. You can now export to Google Sheets.');
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            
+            const errorMessage = urlParams.get('error');
+            if (errorMessage) {
+                showCustomAlert('Error: ' + errorMessage);
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
+        
+        function authorize() {
+            window.location.href = '/authorize';
+        }
+        </script>
+</head>
+<body>
+    <header>
+        <h2>Children's Progress</h2>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('profile') }}">User Information</a></li>
+                <li><a href="{{ url_for('children_progress') }}">Children's Progress</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="profile-container">
+        <div class="button-container">
+            <button id="exportButton" onclick="exportAllSessions()">Export to Google Sheets</button>
+            <button onclick="authorize()">Authorize</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>First Name</th>
+                        <th>Surname</th>
+                        <th>Gender</th>
+                        <th>Father's Name</th>
+                        <th>Mother's Name</th>
+                        <th>Contact Phone Number</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for child in children %}
+                    <tr>
+                        <form method="post" action="{{ url_for('update_child', id=child.id) }}">
+                            <td>
+                                <a href="{{ url_for('child_sessions', child_id=child.id) }}">
+                                    {{ child.first_name }}
+                                </a>
+                            </td>
+                            <td><input type="text" name="surname" value="{{ child.surname }}"></td>
+                            <td>
+                                <select name="gender">
+                                    <option value="male" {% if child.gender == 'male' %}selected{% endif %}>Male</option>
+                                    <option value="female" {% if child.gender == 'female' %}selected{% endif %}>Female</option>
+                                </select>
+                            </td>
+                            <td><input type="text" name="father_name" value="{{ child.father_name }}"></td>
+                            <td><input type="text" name="mother_name" value="{{ child.mother_name }}"></td>
+                            <td><input type="text" name="contact_phone_number" value="{{ child.contact_phone_number }}"></td>
+                            <td>
+                                <button type="submit" class="btn-update">Update</button>
+                            </td>
+                        </form>
+                        <td>
+                            <form method="post" action="{{ url_for('delete_child', child_id=child.id) }}" style="display:inline;">
+                                <input type="hidden" name="delete_child" value="1">
+                                <button type="submit" class="btn-delete">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    
+                    {% endfor %}
+                    <tr>
+                        <form method="post" action="{{ url_for('add_child') }}">
+                            <td><input type="text" name="first_name"></td>
+                            <td><input type="text" name="surname"></td>
+                            <td>
+                                <select name="gender">
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                            </td>
+                            <td><input type="text" name="father_name"></td>
+                            <td><input type="text" name="mother_name"></td>
+                            <td><input type="text" name="contact_phone_number"></td>
+                            <td><input type="hidden" name="add_child" value="1"><button type="submit" class="btn-add">Add</button></td>
+                        </form>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="instructions">
+       
+            <h3>General Instructions:</h3>
+            <ol>
+                <li>Click on the child's First Name in order To view a child's sessions.</li>
+            </ol>
+            <p class="important-note">Note: Deleting a child's record will also remove all associated sessions data.</p>
+        </div>
+        <div class="instructions">
+       
+            <h3>Instructions For Data Export and Report Generation:</h3>
+
+            <ol>
+
+                <li>Click on 'Authorize' and log in to your Google account.</li>
+                <li>Authorize the A.M.S website (Click on Allow).</li>
+                <li>Click on 'Export to Google Sheets' above the table.</li>
+                <li>After finishing the Export, a message will be shown on the screen with instructions on how to generate the report. </li>
+
+            </ol>
+            <p class="important-note">Important For Report Generation, enable the Chrome V8 runtime:</p>
+            <ol>
+                <li>In the opened sheet go to (Extentions -> Apps Script editor)</li>
+                <li>Go to Project Settings (gear icon)</li>
+                <li>Under "General Settings", Click on "Enable Chrome V8 runtime"</li>
+                <li>Save the changes(or Go back to the sheet and Refresh it)</li>
+            </ol>
+        </div>
+    </div>
+
+    <div id="customAlert" class="modal">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <p id="alertMessage"></p>
+          <a id="alertLink" href="" target="_blank">Open Settings</a>
+          <button id="alertOk">OK</button>
+        </div>
+      </div>
+</body>
+</html>
